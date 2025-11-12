@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { MenuItem } from '../types/types';
 import { v4 as uuidv4 } from 'uuid';
+import { saveMenu, loadMenu } from '../utilities/storage';
 
 type AddItemScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddItem'>;
-type AddItemScreenRouteProp = RouteProp<RootStackParamList, 'AddItem'>;
 
 interface Props {
   navigation: AddItemScreenNavigationProp;
-  route: AddItemScreenRouteProp;
 }
 
 export default function AddItemScreen({ navigation }: Props) {
@@ -21,7 +19,7 @@ export default function AddItemScreen({ navigation }: Props) {
   const [course, setCourse] = useState('Starters');
   const [price, setPrice] = useState('');
 
-  const handleAddItem = () => {
+  const handleAdd = async () => {
     if (!name || !description || !price) {
       Alert.alert('Please fill all fields');
       return;
@@ -35,7 +33,12 @@ export default function AddItemScreen({ navigation }: Props) {
       price: parseFloat(price),
     };
 
-    navigation.navigate('Home', { newItem });
+    const menu = await loadMenu();
+    const updatedMenu = [...menu, newItem];
+    await saveMenu(updatedMenu);
+
+    Alert.alert('Menu item added successfully!');
+    navigation.navigate('Home');
   };
 
   return (
@@ -47,7 +50,7 @@ export default function AddItemScreen({ navigation }: Props) {
       <TextInput style={styles.input} value={description} onChangeText={setDescription} />
 
       <Text style={styles.label}>Select Course</Text>
-      <Picker selectedValue={course} onValueChange={(itemValue: string) => setCourse(itemValue)}>
+      <Picker selectedValue={course} onValueChange={setCourse}>
         <Picker.Item label="Starters" value="Starters" />
         <Picker.Item label="Mains" value="Mains" />
         <Picker.Item label="Dessert" value="Dessert" />
@@ -56,7 +59,7 @@ export default function AddItemScreen({ navigation }: Props) {
       <Text style={styles.label}>Price</Text>
       <TextInput style={styles.input} value={price} onChangeText={setPrice} keyboardType="numeric" />
 
-      <Button title="Add Menu Item" onPress={handleAddItem} />
+      <Button title="Add Dish" onPress={handleAdd} />
     </View>
   );
 }
@@ -69,6 +72,5 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     borderRadius: 5,
     padding: 8,
-    marginBottom: 8,
   },
 });
